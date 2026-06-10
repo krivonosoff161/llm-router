@@ -145,6 +145,15 @@ python examples/role_tiers.py     # cheap vs chief + cost
 python -m pytest -q               # offline unit tests (no network)
 ```
 
+What each example shows and what it does *not* prove: [examples/README.md](examples/README.md).
+
+---
+
+## Docs
+
+- [Project map](docs/project-map.md) — modules, what exists today vs not included, reviewer checklist.
+- [Use cases](docs/use-cases.md) — who this is for, practical workflows, limitations.
+
 ---
 
 ## Limitations / non-goals
