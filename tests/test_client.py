@@ -94,3 +94,149 @@ def test_build_request_yandex_apikey(monkeypatch):
 
 def test_build_request_missing_key_returns_none():
     assert client._build_request("openai", "m", "s", "u", False, 100) == (None, None, None)
+
+
+# ── async call(): mocked aiohttp, no network ─────────────────────────────────
+import asyncio  # noqa: E402
+
+
+class _FakeResponse:
+    """Async-context response with canned status/json/text."""
+
+    def __init__(self, status=200, data=None, text=""):
+        self.status = status
+        self._data = data if data is not None else {}
+        self._text = text
+
+    async def json(self):
+        return self._data
+
+    async def text(self):
+        return self._text
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+class _RaisingResponse:
+    """Simulates a network error inside the request context."""
+
+    async def __aenter__(self):
+        raise OSError("connection reset")
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+class _FakeSession:
+    """aiohttp.ClientSession stand-in: pops queued responses, records requests."""
+
+    queue: list = []
+    requests: list = []
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+    def post(self, url, json=None, headers=None, timeout=None):
+        _FakeSession.requests.append({"url": url, "json": json, "headers": headers})
+        return _FakeSession.queue.pop(0)
+
+
+@pytest.fixture()
+def fake_http(monkeypatch):
+    """Patch ClientSession with the fake and make backoff sleeps instant."""
+    _FakeSession.queue = []
+    _FakeSession.requests = []
+    monkeypatch.setattr(client.aiohttp, "ClientSession", _FakeSession)
+
+    async def _no_sleep(_secs):
+        return None
+
+    monkeypatch.setattr(client.asyncio, "sleep", _no_sleep)
+    return _FakeSession
+
+
+def _ok_data(text="hello", inp=100, out=50):
+    return {"choices": [{"message": {"content": text}}],
+            "usage": {"prompt_tokens": inp, "completion_tokens": out}}
+
+
+def test_call_openai_success_returns_text_and_usage(monkeypatch, fake_http):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    fake_http.queue = [_FakeResponse(200, _ok_data())]
+    text, usage = asyncio.run(client.call("cheap", "sys", "usr"))
+    assert text == "hello"
+    assert usage["model"] == "gpt-4o-mini" and usage["total_tokens"] == 150
+    # gpt-4o-mini: 100/1M*0.15 + 50/1M*0.60
+    assert usage["cost_usd"] == pytest.approx(0.000045)
+    assert fake_http.requests[0]["headers"]["Authorization"] == "Bearer sk-test"
+
+
+def test_call_yandex_success_uses_apikey_and_wrapped_model(monkeypatch, fake_http):
+    monkeypatch.setenv("YANDEX_API_KEY", "ya-test")
+    monkeypatch.setenv("YANDEX_FOLDER_ID", "folder123")
+    fake_http.queue = [_FakeResponse(200, _ok_data("привет"))]
+    text, usage = asyncio.run(client.call("cheap", "s", "u", provider="yandex"))
+    assert text == "привет"
+    assert usage["provider"] == "yandex"
+    assert usage["model"] == "gpt://folder123/yandexgpt-lite/latest"
+    assert fake_http.requests[0]["headers"]["Authorization"] == "Api-Key ya-test"
+
+
+def test_call_non200_no_retry(monkeypatch, fake_http):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    fake_http.queue = [_FakeResponse(401, text="unauthorized")]
+    text, usage = asyncio.run(client.call("cheap", "s", "u"))
+    assert text is None
+    assert usage["total_tokens"] == 0
+    assert len(fake_http.requests) == 1          # 4xx (кроме 429) не ретраится
+
+
+def test_call_retries_on_429_then_succeeds(monkeypatch, fake_http):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    fake_http.queue = [_FakeResponse(429), _FakeResponse(200, _ok_data("ok"))]
+    text, _ = asyncio.run(client.call("cheap", "s", "u"))
+    assert text == "ok"
+    assert len(fake_http.requests) == 2
+
+
+def test_call_5xx_exhausts_retries(monkeypatch, fake_http):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("LLM_MAX_RETRIES", "1")
+    fake_http.queue = [_FakeResponse(500), _FakeResponse(503)]
+    text, usage = asyncio.run(client.call("cheap", "s", "u"))
+    assert text is None
+    assert len(fake_http.requests) == 2          # retries=1 → 2 попытки
+    assert usage["model"] == "gpt-4o-mini"       # usage возвращается и на провале
+
+
+def test_call_network_exception_retried_then_fails(monkeypatch, fake_http):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("LLM_MAX_RETRIES", "1")
+    fake_http.queue = [_RaisingResponse(), _RaisingResponse()]
+    text, usage = asyncio.run(client.call("cheap", "s", "u"))
+    assert text is None and usage["total_tokens"] == 0
+
+
+def test_call_missing_api_key_short_circuits(fake_http):
+    text, usage = asyncio.run(client.call("cheap", "s", "u"))
+    assert text is None
+    assert usage["provider"] == "openai" and usage["model"] == "gpt-4o-mini"
+    assert fake_http.requests == []              # до сети не дошли
+
+
+def test_call_empty_content_returns_none(monkeypatch, fake_http):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    fake_http.queue = [_FakeResponse(200, _ok_data(""))]
+    text, usage = asyncio.run(client.call("cheap", "s", "u"))
+    assert text is None
+    assert usage["total_tokens"] == 150          # токены посчитаны несмотря на пустой текст

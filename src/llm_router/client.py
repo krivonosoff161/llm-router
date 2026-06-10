@@ -25,9 +25,12 @@ change it without re-importing, and no secret is cached at import time.
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 
 import aiohttp
+
+log = logging.getLogger("llm_router")
 
 # Default model per role for OpenAI-compatible providers (override via env).
 _OPENAI_DEFAULTS = {"cheap": "gpt-4o-mini", "mid": "gpt-4o-mini",
@@ -137,7 +140,7 @@ async def call(role: str, system: str, user: str, *,
     retries = int(os.getenv("LLM_MAX_RETRIES", "2"))
     url, headers, payload = _build_request(p, model, system, user, json_mode, max_tokens)
     if url is None:
-        print(f"llm_router[{p}/{role}]: API key not set")
+        log.warning("llm_router[%s/%s]: API key not set", p, role)
         return None, usage_dict(p, model, role, {})
 
     last_err = None
@@ -152,7 +155,7 @@ async def call(role: str, system: str, user: str, *,
                         continue
                     if r.status != 200:
                         body = await r.text()
-                        print(f"llm_router[{p}/{role}]: HTTP {r.status} — {body[:200]}")
+                        log.error("llm_router[%s/%s]: HTTP %s — %s", p, role, r.status, body[:200])
                         return None, usage_dict(p, model, role, {})
                     data = await r.json()
             text = (data["choices"][0]["message"]["content"] or "").strip()
@@ -160,5 +163,5 @@ async def call(role: str, system: str, user: str, *,
         except Exception as e:  # noqa: BLE001 — network/parse errors are retried
             last_err = str(e)
             await asyncio.sleep(min(2 ** attempt, 8))
-    print(f"llm_router[{p}/{role}]: failed after retries — {last_err}")
+    log.error("llm_router[%s/%s]: failed after retries — %s", p, role, last_err)
     return None, usage_dict(p, model, role, {})
