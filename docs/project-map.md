@@ -30,8 +30,10 @@ call(role, system, user)
 | File | Role | Size |
 |---|---|---|
 | `src/llm_router/client.py` | everything: provider resolution, request building, retry loop, cost accounting | ~170 lines |
-| `src/llm_router/__init__.py` | public exports: `call`, `model_for`, `active_provider`, `estimate_cost`, `usage_dict` | 12 lines |
+| `src/llm_router/budget.py` | offline usage aggregation, budget status, and counterfactual savings helpers | ~220 lines |
+| `src/llm_router/__init__.py` | public exports for client and budget helpers | small |
 | `tests/test_client.py` | 20 offline tests — helpers **and** the full `call()` path with a mocked `aiohttp` session | ~250 lines |
+| `tests/test_budget.py` | offline tests for usage summary, budget caps, and savings estimates | small |
 | `examples/` | two runnable scripts (need a real API key) — see [examples/README.md](../examples/README.md) | small |
 
 There is intentionally no package layering: one file is the whole surface.
@@ -41,6 +43,8 @@ There is intentionally no package layering: one file is the whole surface.
 - One async `call()` for chat completions (one system + one user message).
 - Two provider paths: OpenAI-compatible (Bearer) and Yandex AI Studio (Api-Key).
 - Role→model mapping, JSON mode, per-call cost with env-overridable prices.
+- Offline budget helpers for usage logs: `summarize_usage`, `budget_status`,
+  `raise_if_budget_exceeded`, and `build_savings_report`.
 - Retry on 429/5xx, timeout, fail-fast on missing Yandex config.
 - Errors are reported via the `llm_router` logger (no exceptions leak to the caller;
   failures return `(None, usage)`).
@@ -48,7 +52,7 @@ There is intentionally no package layering: one file is the whole surface.
 ## What is NOT included (by design)
 
 - Streaming, embeddings, tools/function calling, vision, multi-turn history.
-- Provider SDKs, connection pooling across calls, rate-limit budgeting.
+- Provider SDKs, connection pooling across calls, runtime global rate-limit budgeting.
 - Any persistence — the caller decides what to do with the usage dicts.
 
 If a change adds one of these, it is a scope change, not a fix — discuss first.
@@ -58,6 +62,7 @@ If a change adds one of these, it is a scope change, not a fix — discuss first
 1. Read `client.py` top docstring (the contract) — 25 lines.
 2. Read `call()` (the last function) — the entire runtime behavior is there.
 3. Skim `tests/test_client.py` test names — they enumerate the supported behaviors.
+4. Skim `budget.py` — it has no network calls and only operates on returned usage dicts.
 
 ## How to run checks
 
@@ -80,6 +85,8 @@ CI (`.github/workflows/tests.yml`) runs pytest on Python 3.9 / 3.11 / 3.12 (Linu
   `call()` test. Keep the `(text | None, usage)` return contract intact.
 - Price table updates: prefer documenting the env override; the built-in table
   is illustrative, not authoritative.
+- Budget logic: keep it offline/stateless unless the repository intentionally grows a
+  persistence layer. The caller owns the JSONL log.
 
 ## Reviewer checklist (for future changes, incl. agent-generated)
 
@@ -89,3 +96,4 @@ CI (`.github/workflows/tests.yml`) runs pytest on Python 3.9 / 3.11 / 3.12 (Linu
 - [ ] Every new behavior has an offline test (mock the session, never the network).
 - [ ] README tables (providers / env vars) still match the code.
 - [ ] No claim of provider coverage beyond what `_build_request` actually handles.
+- [ ] Budget helpers still make clear they estimate from usage records, not invoices.

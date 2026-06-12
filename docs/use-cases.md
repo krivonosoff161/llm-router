@@ -13,8 +13,9 @@ summarize) and a handful are high-stakes decisions. Paying flagship prices for
 everything multiplies the bill; hard-coding one provider makes switching painful;
 and without per-call cost data you discover overspend only on the invoice.
 
-`llm-router` addresses exactly those three points: role tiers, provider
-flexibility via env, and a cost-stamped usage dict on every call.
+`llm-router` addresses exactly those points: role tiers, provider flexibility
+via env, a cost-stamped usage dict on every call, and offline helpers for
+checking budget caps against your own usage log.
 
 ## Practical workflows
 
@@ -28,14 +29,20 @@ packages as a pipeline; llm-router is the client underneath.)
 **2. Budget log with zero infrastructure.**
 Append every returned `usage` dict to a JSONL file. You get per-call
 provider/model/tokens/cost in USD and your local currency — enough for a daily
-spend report with `jq` or ten lines of Python.
+spend report with `summarize_usage(...)`, `budget_status(...)`, or ten lines of
+Python.
 
-**3. Provider migration without code changes.**
+**3. Counterfactual savings report.**
+Take the same usage records and ask: "what if these input/output tokens had all
+gone through my chief model?" `build_savings_report(...)` gives a quick estimate
+for documentation, alerts, or daily cost review.
+
+**4. Provider migration without code changes.**
 Moving bulk traffic from OpenAI to a cheaper OpenAI-compatible host (Alibaba,
 OpenRouter, Together, local Ollama/vLLM) is an env edit: `OPENAI_BASE_URL` +
 key + model names. The decision tier can stay where it is.
 
-**4. Regional/provider redundancy.**
+**5. Regional/provider redundancy.**
 Keep a Yandex AI Studio configuration next to an OpenAI-compatible one and flip
 `LLM_PROVIDER` per environment — useful when one provider is unavailable in a
 deployment region.
@@ -53,8 +60,9 @@ deployment region.
 - Chat completions only; one system + one user message per call.
 - Failures return `(None, usage)` rather than raising — callers must check for
   `None` or items will be silently skipped.
-- Retries (429/5xx) are basic exponential backoff; there is no global rate-limit
-  budget across concurrent callers.
+- Retries (429/5xx) are basic exponential backoff; there is no runtime global
+  rate-limit budget across concurrent callers.
 - Cost figures are estimates from token counts × configured prices — they will
-  not match invoices that bill cached/batch tokens differently.
+  not match invoices that bill cached/batch tokens differently. Budget helpers
+  estimate from usage records; invoices remain authoritative.
 - CI covers Linux (3.9/3.11/3.12); Windows is used in development but not in CI.

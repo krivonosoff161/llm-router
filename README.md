@@ -18,6 +18,8 @@ In agentic systems most LLM calls are cheap bulk work (extract, classify, filter
 - **Role tiers** — `cheap` / `mid` / `chief` / `audit`, each mapped to a model via env. Route volume to `cheap`, escalate only candidates to `chief`.
 - **Provider flexibility** — one env var flips between OpenAI-compatible providers; a custom `OPENAI_BASE_URL` covers Alibaba, OpenRouter, Together, Ollama, vLLM, etc. Yandex AI Studio has a native path.
 - **Per-call cost** — every call returns token counts and cost in **USD + a configurable local currency** (set `LLM_FX` / `LLM_CCY`). Aggregate the dicts to a budget log.
+- **Budget helpers** — aggregate usage records, check a daily cap, and estimate savings
+  versus sending the same tokens to the `chief` model.
 - **Resilience** — retries on `429` / `5xx` with exponential backoff.
 
 ---
@@ -29,6 +31,8 @@ In agentic systems most LLM calls are cheap bulk work (extract, classify, filter
 - OpenAI-compatible **and** Yandex AI Studio providers.
 - `json_mode=True` → adds `response_format={"type":"json_object"}` (OpenAI-compatible).
 - Cost estimation from an override-able price table (`LLM_PRICE_<MODEL>_IN/OUT_USD_PER_1M`).
+- Budget helpers for logs you own: `summarize_usage`, `budget_status`, and
+  `build_savings_report`.
 - Zero secrets cached at import — all config read live from env.
 - ~150 LOC, one runtime dependency (`aiohttp`).
 
@@ -115,6 +119,20 @@ export LLM_PRICE_GPT_4O_MINI_IN_USD_PER_1M=0.15
 export LLM_PRICE_GPT_4O_MINI_OUT_USD_PER_1M=0.60
 ```
 
+Summarize a batch of usage records:
+
+```python
+from llm_router import summarize_usage, budget_status, build_savings_report
+
+usages = [u1, u2]  # dicts returned by call()
+print(summarize_usage(usages).as_dict())
+print(budget_status(usages, limit_usd=1.00).as_dict())
+print(build_savings_report(usages, counterfactual_role="chief").as_dict())
+```
+
+`LLM_BUDGET_USD_DAY` can be used as a default budget cap for `budget_status(...)`.
+The router stays stateless; you decide where the JSONL budget log lives.
+
 ---
 
 ## Configuration (env)
@@ -132,6 +150,7 @@ export LLM_PRICE_GPT_4O_MINI_OUT_USD_PER_1M=0.60
 | `LLM_DEFAULT_TIMEOUT` | `60` | per-call timeout (s) |
 | `LLM_MAX_RETRIES` | `2` | retries on 429/5xx |
 | `LLM_PRICE_<MODEL>_IN/OUT_USD_PER_1M` | from table | override price per model |
+| `LLM_BUDGET_USD_DAY` | unset | optional cap used by budget helpers |
 
 See [.env.example](.env.example).
 
