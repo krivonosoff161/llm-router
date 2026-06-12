@@ -14,7 +14,7 @@ keywords = ["llm", "openai", "router", "agents", "cost", "qwen", "yandex"]
 dependencies = ["aiohttp>=3.9"]
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "ruff>=0.6"]
 
 [project.urls]
 Homepage = "https://github.com/krivonosoff161/llm-router"

@@ -42,7 +42,7 @@ cd llm-router
 pip install -e .          # or: pip install -r requirements.txt
 ```
 
-Requires **Python 3.9+**. Verified on Windows; should run on Linux/macOS (pure Python + `aiohttp`, no OS-specific calls).
+Requires **Python 3.9+**. CI covers Linux; the package is pure Python and is expected to run on Windows/macOS too.
 
 ---
 
