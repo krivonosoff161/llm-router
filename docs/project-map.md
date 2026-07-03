@@ -35,6 +35,7 @@ call(role, system, user)
 | `tests/test_client.py` | 20 offline tests — helpers **and** the full `call()` path with a mocked `aiohttp` session | ~250 lines |
 | `tests/test_budget.py` | offline tests for usage summary, budget caps, and savings estimates | small |
 | `examples/` | two runnable scripts (need a real API key) — see [examples/README.md](../examples/README.md) | small |
+| `docs/operating-model.md` | role-budget operating model, usage-log fields, escalation gates, and residual risk | small |
 
 There is intentionally no package layering: one file is the whole surface.
 

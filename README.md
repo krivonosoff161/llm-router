@@ -172,6 +172,7 @@ What each example shows and what it does *not* prove: [examples/README.md](examp
 
 - [Project map](docs/project-map.md) — modules, what exists today vs not included, reviewer checklist.
 - [Use cases](docs/use-cases.md) — who this is for, practical workflows, limitations.
+- [Operating model](docs/operating-model.md) — role budgets, usage records, escalation gates, and residual risk.
 
 ---
 
