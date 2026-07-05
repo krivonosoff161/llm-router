@@ -173,6 +173,8 @@ What each example shows and what it does *not* prove: [examples/README.md](examp
 - [Project map](docs/project-map.md) — modules, what exists today vs not included, reviewer checklist.
 - [Use cases](docs/use-cases.md) — who this is for, practical workflows, limitations.
 - [Operating model](docs/operating-model.md) — role budgets, usage records, escalation gates, and residual risk.
+- [Portfolio documentation contract](https://github.com/krivonosoff161/krivonosoff161/blob/main/docs/documentation-contract.md)
+  — how this support layer fits into the broader GitHub portfolio.
 
 ---
 
@@ -182,6 +184,8 @@ What each example shows and what it does *not* prove: [examples/README.md](examp
 - One system + one user message per call (no multi-turn history helper).
 - The price table is illustrative; confirm real prices with your provider.
 - Not a full framework — it's a focused routing + cost-logging utility you drop into your own agent loop.
+- Not the portfolio flagship, policy authority, or security boundary. Larger
+  systems own their own validation, authorization, storage, and safety rules.
 
 ---
 
