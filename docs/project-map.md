@@ -10,6 +10,10 @@ chosen by **role** (`cheap` / `mid` / `chief` / `audit`), across any
 OpenAI-compatible endpoint or Yandex AI Studio, and returns the text together
 with a **usage dict** (tokens + cost in USD and a configurable local currency).
 
+In the public portfolio this is a support layer, not a flagship project. The
+portfolio-level documentation hierarchy is defined in the
+[Documentation Contract](https://github.com/krivonosoff161/krivonosoff161/blob/main/docs/documentation-contract.md).
+
 The mental model is one sentence: *"send bulk work to the cheap tier, escalate
 the few decisions that matter to the chief tier, and know what every call
 cost you."*

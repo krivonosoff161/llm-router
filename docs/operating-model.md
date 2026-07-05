@@ -4,6 +4,10 @@
 calls by role and record per-call usage. The application still owns policy,
 storage, rate limits, audit, and approval.
 
+Portfolio role: support library. The portfolio-level source-of-truth and
+public/private documentation hierarchy live in the
+[Documentation Contract](https://github.com/krivonosoff161/krivonosoff161/blob/main/docs/documentation-contract.md).
+
 ## Source Baseline
 
 The operating model follows a few public ideas:
