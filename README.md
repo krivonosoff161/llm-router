@@ -7,9 +7,13 @@ Portfolio ownership and evidence ceilings: [Security Portfolio module contract](
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 
 **A tiny, dependency-light async LLM router with role tiers and per-call cost logging.**
-One `call()` interface across any OpenAI-compatible endpoint (OpenAI, Alibaba Qwen, OpenRouter, Together, local Ollama/vLLM) **and** Yandex AI Studio — so you send high-volume work to a *cheap* model and reserve an *expensive* one for the few decisions that matter.
+One `call()` interface for the tested OpenAI-compatible request shape and a
+separate Yandex AI Studio path. Provider compatibility depends on each endpoint's
+current API contract and must be verified before use.
 
-> Extracted and generalized from a production agentic news scanner that runs nightly on a cheap→chief tier. No SDKs, no models hardcoded in the logic — just `aiohttp` + environment config.
+> The public library demonstrates a cheap-to-chief routing pattern with offline
+> tests. It does not publish or verify a production deployment claim. No SDKs or
+> models are hardcoded in the routing logic.
 
 ---
 
@@ -18,7 +22,10 @@ One `call()` interface across any OpenAI-compatible endpoint (OpenAI, Alibaba Qw
 In agentic systems most LLM calls are cheap bulk work (extract, classify, filter) and a few are high-stakes (the final decision). Paying flagship prices for everything is wasteful; juggling provider SDKs is annoying. `llm-router` gives you:
 
 - **Role tiers** — `cheap` / `mid` / `chief` / `audit`, each mapped to a model via env. Route volume to `cheap`, escalate only candidates to `chief`.
-- **Provider flexibility** — one env var flips between OpenAI-compatible providers; a custom `OPENAI_BASE_URL` covers Alibaba, OpenRouter, Together, Ollama, vLLM, etc. Yandex AI Studio has a native path.
+- **Provider flexibility** — a custom `OPENAI_BASE_URL` can target endpoints that
+  implement the tested request/response contract; Yandex AI Studio has a separate
+  path. Provider identity, terms, availability, and exact compatibility are external
+  gates.
 - **Per-call cost** — every call returns token counts and cost in **USD + a configurable local currency** (set `LLM_FX` / `LLM_CCY`). Aggregate the dicts to a budget log.
 - **Budget helpers** — aggregate usage records, check a daily cap, and estimate savings
   versus sending the same tokens to the `chief` model.
