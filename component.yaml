@@ -22,7 +22,7 @@
   "consumes": ["caller-supplied provider configuration and credentials at runtime"],
   "contracts": [
     {"id": "component-manifest", "version": "1", "direction": "consumes", "required": false},
-    {"id": "router-invocation-receipt", "version": "1.0", "direction": "produces", "required": false}
+    {"id": "router-invocation-receipt", "version": "1.0", "direction": "provides", "required": false}
   ],
   "docs": [
     {"path": "README.md", "role": "component-front-door"},

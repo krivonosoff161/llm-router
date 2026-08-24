@@ -61,7 +61,7 @@ def test_component_manifest_is_closed_and_truthful() -> None:
     assert {
         "id": "router-invocation-receipt",
         "version": "1.0",
-        "direction": "produces",
+        "direction": "provides",
         "required": False,
     } in manifest["contracts"]
 
