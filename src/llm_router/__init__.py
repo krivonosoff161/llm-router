@@ -18,6 +18,16 @@ from .client import (
     model_for,
     usage_dict,
 )
+from .receipt import (
+    INVOCATION_RECEIPT_V1,
+    InvocationAttemptV1,
+    InvocationReceiptError,
+    InvocationReceiptV1,
+    build_invocation_receipt_v1,
+    decode_invocation_receipt_v1,
+    encode_invocation_receipt_v1,
+    invocation_receipt_v1_json_schema,
+)
 
 __all__ = [
     "call",
@@ -33,5 +43,13 @@ __all__ = [
     "budget_status",
     "raise_if_budget_exceeded",
     "build_savings_report",
+    "INVOCATION_RECEIPT_V1",
+    "InvocationAttemptV1",
+    "InvocationReceiptError",
+    "InvocationReceiptV1",
+    "build_invocation_receipt_v1",
+    "decode_invocation_receipt_v1",
+    "encode_invocation_receipt_v1",
+    "invocation_receipt_v1_json_schema",
 ]
 __version__ = "0.1.0"

@@ -27,10 +27,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 
 import aiohttp
 
 log = logging.getLogger("llm_router")
+_ROLE_VALUES = frozenset({"cheap", "mid", "chief", "audit"})
+_PROVIDER_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,63}$")
+_MAX_RETRIES = 15
 
 # Default model per role for OpenAI-compatible providers (override via env).
 _OPENAI_DEFAULTS = {"cheap": "gpt-4o-mini", "mid": "gpt-4o-mini",
@@ -52,7 +56,10 @@ _PRICE_USD_PER_1M = {
 
 
 def active_provider(provider: str | None = None) -> str:
-    return (provider or os.getenv("LLM_PROVIDER", "openai")).strip().lower()
+    value = (provider or os.getenv("LLM_PROVIDER", "openai")).strip().lower()
+    if not _PROVIDER_PATTERN.fullmatch(value):
+        raise ValueError("llm_router: provider must be a bounded canonical token")
+    return value
 
 
 def model_for(role: str, provider: str | None = None) -> str:
@@ -61,6 +68,8 @@ def model_for(role: str, provider: str | None = None) -> str:
     Raises ValueError for a misconfigured Yandex provider (no YANDEX_FOLDER_ID and
     no explicit YANDEX_<ROLE>_MODEL) — fail fast instead of sending an empty model.
     """
+    if role not in _ROLE_VALUES:
+        raise ValueError("llm_router: role must be cheap, mid, chief, or audit")
     p = active_provider(provider)
     if p == "yandex":
         uri = os.getenv(f"YANDEX_{role.upper()}_MODEL", "").strip("'\"")
@@ -138,30 +147,45 @@ async def call(role: str, system: str, user: str, *,
     model = model_for(role, p)
     timeout = timeout or int(os.getenv("LLM_DEFAULT_TIMEOUT", "60"))
     retries = int(os.getenv("LLM_MAX_RETRIES", "2"))
+    if not 0 <= retries <= _MAX_RETRIES:
+        raise ValueError(f"llm_router: LLM_MAX_RETRIES must be between 0 and {_MAX_RETRIES}")
     url, headers, payload = _build_request(p, model, system, user, json_mode, max_tokens)
     if url is None:
-        log.warning("llm_router[%s/%s]: API key not set", p, role)
+        log.warning("llm_router: reason=router.missing_configuration")
         return None, usage_dict(p, model, role, {})
 
-    last_err = None
+    last_reason = "provider.not_attempted"
     for attempt in range(retries + 1):
         try:
             async with aiohttp.ClientSession() as s:
                 async with s.post(url, json=payload, headers=headers,
                                   timeout=aiohttp.ClientTimeout(total=timeout)) as r:
-                    if r.status == 429 or r.status >= 500:
-                        last_err = f"HTTP {r.status}"
+                    if r.status == 429 or 500 <= r.status <= 599:
+                        last_reason = (
+                            "provider.rate_limited"
+                            if r.status == 429
+                            else "provider.server_error"
+                        )
+                        await asyncio.sleep(min(2 ** attempt, 8))
+                        continue
+                    if not 100 <= r.status <= 599:
+                        last_reason = "provider.invalid_response"
                         await asyncio.sleep(min(2 ** attempt, 8))
                         continue
                     if r.status != 200:
-                        body = await r.text()
-                        log.error("llm_router[%s/%s]: HTTP %s — %s", p, role, r.status, body[:200])
+                        log.error(
+                            "llm_router: reason=provider.nonretryable_http_error http_status=%s",
+                            r.status,
+                        )
                         return None, usage_dict(p, model, role, {})
                     data = await r.json()
             text = (data["choices"][0]["message"]["content"] or "").strip()
             return (text or None), usage_dict(p, model, role, data)
-        except Exception as e:  # noqa: BLE001 — network/parse errors are retried
-            last_err = str(e)
+        except Exception:  # noqa: BLE001 — network/parse errors are retried
+            # Exception text can contain endpoint, payload, or provider details.  Keep
+            # public logs to a fixed reason code; callers retain their own private
+            # diagnostics outside this library if needed.
+            last_reason = "provider.network_or_response_error"
             await asyncio.sleep(min(2 ** attempt, 8))
-    log.error("llm_router[%s/%s]: failed after retries — %s", p, role, last_err)
+    log.error("llm_router: reason=%s", last_reason)
     return None, usage_dict(p, model, role, {})

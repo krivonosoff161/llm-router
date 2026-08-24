@@ -26,6 +26,13 @@ def test_model_for_openai_defaults():
     assert model_for("chief", "openai") == "gpt-4o"
 
 
+def test_role_and_provider_tokens_fail_closed():
+    with pytest.raises(ValueError, match="role"):
+        model_for("private-role", "openai")
+    with pytest.raises(ValueError, match="provider"):
+        client.active_provider("private/provider")
+
+
 def test_model_for_env_override(monkeypatch):
     monkeypatch.setenv("LLM_CHEAP_MODEL", "qwen3-30b-a3b-instruct-2507")
     assert model_for("cheap", "openai") == "qwen3-30b-a3b-instruct-2507"
@@ -201,6 +208,17 @@ def test_call_non200_no_retry(monkeypatch, fake_http):
     assert len(fake_http.requests) == 1          # 4xx (кроме 429) не ретраится
 
 
+def test_call_non200_log_does_not_include_provider_body(monkeypatch, fake_http, caplog):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    sensitive_body = "raw-provider-body-must-not-appear"
+    fake_http.queue = [_FakeResponse(401, text=sensitive_body)]
+
+    asyncio.run(client.call("cheap", "s", "u"))
+
+    assert sensitive_body not in caplog.text
+    assert "reason=provider.nonretryable_http_error" in caplog.text
+
+
 def test_call_retries_on_429_then_succeeds(monkeypatch, fake_http):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     fake_http.queue = [_FakeResponse(429), _FakeResponse(200, _ok_data("ok"))]
@@ -219,6 +237,29 @@ def test_call_5xx_exhausts_retries(monkeypatch, fake_http):
     assert usage["model"] == "gpt-4o-mini"       # usage возвращается и на провале
 
 
+@pytest.mark.parametrize("retries", ["-1", "16"])
+def test_call_rejects_retry_count_outside_receipt_limit(monkeypatch, fake_http, retries):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("LLM_MAX_RETRIES", retries)
+
+    with pytest.raises(ValueError, match="LLM_MAX_RETRIES"):
+        asyncio.run(client.call("cheap", "s", "u"))
+
+    assert fake_http.requests == []
+
+
+def test_invalid_http_status_uses_retryable_sanitized_class(monkeypatch, fake_http, caplog):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("LLM_MAX_RETRIES", "0")
+    fake_http.queue = [_FakeResponse(700, text="raw-body-must-not-appear")]
+
+    text, usage = asyncio.run(client.call("cheap", "s", "u"))
+
+    assert text is None and usage["total_tokens"] == 0
+    assert "reason=provider.invalid_response" in caplog.text
+    assert "raw-body-must-not-appear" not in caplog.text
+
+
 def test_call_network_exception_retried_then_fails(monkeypatch, fake_http):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     monkeypatch.setenv("LLM_MAX_RETRIES", "1")
@@ -227,11 +268,40 @@ def test_call_network_exception_retried_then_fails(monkeypatch, fake_http):
     assert text is None and usage["total_tokens"] == 0
 
 
+def test_call_exception_log_uses_fixed_reason_code(monkeypatch, fake_http, caplog):
+    class _SensitiveFailure:
+        async def __aenter__(self):
+            raise OSError("private-endpoint-and-payload-must-not-appear")
+
+        async def __aexit__(self, *exc):
+            return False
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("LLM_MAX_RETRIES", "0")
+    fake_http.queue = [_SensitiveFailure()]
+
+    asyncio.run(client.call("cheap", "s", "u"))
+
+    assert "private-endpoint-and-payload-must-not-appear" not in caplog.text
+    assert "reason=provider.network_or_response_error" in caplog.text
+
+
 def test_call_missing_api_key_short_circuits(fake_http):
     text, usage = asyncio.run(client.call("cheap", "s", "u"))
     assert text is None
     assert usage["provider"] == "openai" and usage["model"] == "gpt-4o-mini"
     assert fake_http.requests == []              # до сети не дошли
+
+
+def test_missing_configuration_log_omits_untrusted_provider_and_role(fake_http, caplog):
+    provider = "private-provider-label"
+    role = "audit"
+
+    asyncio.run(client.call(role, "s", "u", provider=provider))
+
+    assert provider not in caplog.text
+    assert role not in caplog.text
+    assert "reason=router.missing_configuration" in caplog.text
 
 
 def test_call_empty_content_returns_none(monkeypatch, fake_http):

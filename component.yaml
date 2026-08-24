@@ -17,17 +17,19 @@
     "checks": [],
     "collectors": [],
     "adapters": ["openai-compatible-chat", "yandex-ai-studio-chat"],
-    "contracts": []
+    "contracts": ["router-invocation-receipt"]
   },
   "consumes": ["caller-supplied provider configuration and credentials at runtime"],
   "contracts": [
-    {"id": "component-manifest", "version": "1", "direction": "consumes", "required": false}
+    {"id": "component-manifest", "version": "1", "direction": "consumes", "required": false},
+    {"id": "router-invocation-receipt", "version": "1.0", "direction": "produces", "required": false}
   ],
   "docs": [
     {"path": "README.md", "role": "component-front-door"},
     {"path": "docs/component-roadmap.md", "role": "component-owned"},
     {"path": "docs/project-map.md", "role": "component-owned"},
     {"path": "docs/operating-model.md", "role": "component-owned"},
+    {"path": "docs/invocation-receipt.md", "role": "component-owned"},
     {"path": "docs/security-portfolio-roadmap.md", "role": "historical"},
     {"path": "docs/security-portfolio-roadmap-public.yaml", "role": "historical"},
     {"path": "docs/security-portfolio-roadmap-contract.json", "role": "historical"}
@@ -35,13 +37,14 @@
   "compatibility": {
     "harness_api": "not-yet-declared",
     "python": ">=3.9",
-    "platforms": {"supported": ["linux", "windows"], "tested": ["linux"]}
+    "platforms": {"supported": ["linux", "windows"], "tested": ["linux", "windows"]}
   },
-  "integration_status": "standalone",
-  "evidence_refs": ["pyproject.toml", "docs/project-map.md", ".github/workflows/tests.yml"],
+  "integration_status": "contract_only",
+  "evidence_refs": ["pyproject.toml", "docs/project-map.md", "contracts/router-invocation-receipt.v1.schema.json", "tests/test_receipt.py", ".github/workflows/tests.yml"],
   "claims": [
     "bounded role-based provider routing and retries",
-    "offline-tested usage, budget, and cost arithmetic"
+    "offline-tested usage, budget, and cost arithmetic",
+    "canonical digest-bound invocation receipt with strict attempt and fixed-point cost semantics"
   ],
   "non_claims": [
     "security control",
@@ -49,6 +52,7 @@
     "secret broker",
     "provider attestation",
     "invoice truth",
+    "receipt evidence as permission to invoke a provider",
     "installable Harness extension"
   ],
   "authority": "none"

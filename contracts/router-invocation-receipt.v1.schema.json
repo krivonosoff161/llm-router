@@ -1,0 +1,291 @@
+{
+  "$id": "https://github.com/krivonosoff161/llm-router/contracts/router-invocation-receipt.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Closed shape schema. Semantic state-machine, binding, and fixed-point arithmetic checks are authoritative in llm_router.receipt.",
+  "properties": {
+    "attempts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_index": {
+            "maximum": 16,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "http_status": {
+            "oneOf": [
+              {
+                "maximum": 599,
+                "minimum": 100,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "invalid_response",
+              "network_error",
+              "nonretryable_http_error",
+              "rate_limited",
+              "server_error",
+              "success"
+            ],
+            "type": "string"
+          },
+          "reason_code": {
+            "enum": [
+              "provider.invalid_response",
+              "provider.network_error",
+              "provider.nonretryable_http_error",
+              "provider.rate_limited",
+              "provider.server_error",
+              "provider.success"
+            ],
+            "type": "string"
+          },
+          "response_payload_sha256": {
+            "oneOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "attempt_index",
+          "http_status",
+          "outcome",
+          "reason_code",
+          "response_payload_sha256"
+        ],
+        "type": "object"
+      },
+      "maxItems": 16,
+      "type": "array"
+    },
+    "cost_local_nanos": {
+      "maximum": 1000000000000000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "cost_usd_nanos": {
+      "maximum": 1000000000000000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "type": "string"
+    },
+    "fx_rate_local_nanos_per_usd": {
+      "maximum": 1000000000000000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "fx_source": {
+      "enum": [
+        "identity",
+        "operator_declared",
+        "unavailable"
+      ],
+      "type": "string"
+    },
+    "fx_source_ref_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "input_rate_usd_nanos_per_million": {
+      "maximum": 1000000000000000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "input_tokens": {
+      "maximum": 1000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "invoice_authoritative": {
+      "const": false
+    },
+    "model_id_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "maxLength": 32,
+      "type": "string"
+    },
+    "operational_authority": {
+      "const": "none"
+    },
+    "output_rate_usd_nanos_per_million": {
+      "maximum": 1000000000000000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "output_text_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "output_tokens": {
+      "maximum": 1000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "pricing_ref_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "pricing_source": {
+      "enum": [
+        "illustrative_builtin",
+        "operator_override",
+        "unpriced"
+      ],
+      "type": "string"
+    },
+    "pricing_source_ref_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "producer_id_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "provider_id": {
+      "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
+      "type": "string"
+    },
+    "receipt_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "request_payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "response_payload_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "role": {
+      "enum": [
+        "audit",
+        "cheap",
+        "chief",
+        "mid"
+      ],
+      "type": "string"
+    },
+    "rounding_mode": {
+      "const": "half_even"
+    },
+    "schema_version": {
+      "const": "llm-router-invocation-receipt-v1.0"
+    },
+    "terminal_reason_code": {
+      "enum": [
+        "router.empty_content",
+        "router.missing_configuration",
+        "router.nonretryable_http_error",
+        "router.retry_exhausted",
+        "router.success"
+      ],
+      "type": "string"
+    },
+    "terminal_status": {
+      "enum": [
+        "empty_content",
+        "missing_configuration",
+        "nonretryable_http_error",
+        "retry_exhausted",
+        "success"
+      ],
+      "type": "string"
+    },
+    "total_tokens": {
+      "maximum": 1000000000000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "usage_provenance": {
+      "enum": [
+        "absent",
+        "provider_reported"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "attempts",
+    "cost_local_nanos",
+    "cost_usd_nanos",
+    "currency",
+    "fx_rate_local_nanos_per_usd",
+    "fx_source",
+    "fx_source_ref_sha256",
+    "input_rate_usd_nanos_per_million",
+    "input_tokens",
+    "invoice_authoritative",
+    "model_id_sha256",
+    "occurred_at",
+    "operational_authority",
+    "output_rate_usd_nanos_per_million",
+    "output_text_sha256",
+    "output_tokens",
+    "pricing_ref_sha256",
+    "pricing_source",
+    "pricing_source_ref_sha256",
+    "producer_id_hash",
+    "provider_id",
+    "receipt_id",
+    "request_payload_sha256",
+    "response_payload_sha256",
+    "role",
+    "rounding_mode",
+    "schema_version",
+    "terminal_reason_code",
+    "terminal_status",
+    "total_tokens",
+    "usage_provenance"
+  ],
+  "title": "LLM Router Invocation Receipt V1",
+  "type": "object"
+}
