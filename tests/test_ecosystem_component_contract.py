@@ -42,7 +42,7 @@ def test_component_manifest_is_closed_and_truthful() -> None:
     assert manifest["schema_version"] == "AgenticSecurityEcosystemComponent.v1"
     assert manifest["component_id"] == "llm-router"
     assert manifest["kind"] == "support_adapter"
-    assert manifest["integration_status"] == "standalone"
+    assert manifest["integration_status"] == "contract_only"
     assert manifest["authority"] == "none"
     package = manifest["package"]
     assert package == {
@@ -56,7 +56,14 @@ def test_component_manifest_is_closed_and_truthful() -> None:
     assert compatibility["python"] == ">=3.9"
     platforms = compatibility["platforms"]
     assert isinstance(platforms, dict)
-    assert platforms == {"supported": ["linux", "windows"], "tested": ["linux"]}
+    assert platforms == {"supported": ["linux", "windows"], "tested": ["linux", "windows"]}
+    assert "router-invocation-receipt" in manifest["owns"]["contracts"]
+    assert {
+        "id": "router-invocation-receipt",
+        "version": "1.0",
+        "direction": "provides",
+        "required": False,
+    } in manifest["contracts"]
 
 
 def test_document_roles_exist_and_preserve_historical_snapshots() -> None:
@@ -75,8 +82,10 @@ def test_front_door_keeps_support_boundary_explicit() -> None:
     roadmap = (ROOT / "docs" / "component-roadmap.md").read_text(encoding="utf-8")
     assert "docs/component-roadmap.md" in readme
     assert "agentic-security-harness/blob/main/docs/ecosystem-roadmap.md" in readme
-    assert "standalone support adapter" in readme
-    assert "current CI test matrix records Linux only" in roadmap
+    assert "`contract_only`" in readme
+    assert "Linux and Windows are supported" in roadmap
+    assert "does not authorize a provider call" in (
+        ROOT / "docs" / "invocation-receipt.md"
+    ).read_text(encoding="utf-8")
     non_claims = set(load_manifest()["non_claims"])
     assert {"security control", "policy gateway", "secret broker"} <= non_claims
-

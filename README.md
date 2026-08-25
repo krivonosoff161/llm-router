@@ -17,8 +17,9 @@ current API contract and must be verified before use.
 > tests. It does not publish or verify a production deployment claim. No SDKs or
 > models are hardcoded in the routing logic.
 
-`llm-router` is currently a standalone support adapter. It is not yet a Harness
-extension, and installing Harness does not install or activate this package.
+`llm-router` now publishes a source-owned, offline invocation-receipt contract and is
+therefore `contract_only` in the ecosystem. It is not yet a Harness extension, and
+installing Harness does not install, invoke, or activate this package.
 
 ---
 
@@ -35,6 +36,9 @@ In agentic systems most LLM calls are cheap bulk work (extract, classify, filter
 - **Budget helpers** — aggregate usage records, check a daily cap, and estimate savings
   versus sending the same tokens to the `chief` model.
 - **Resilience** — retries on `429` / `5xx` with exponential backoff.
+- **Canonical receipt contract** — strict, digest-bound attempt, usage, pricing, and FX
+  evidence without credentials, endpoints, prompts, output text, response bodies, or
+  exception messages.
 
 ---
 
@@ -147,6 +151,35 @@ print(build_savings_report(usages, counterfactual_role="chief").as_dict())
 `LLM_BUDGET_USD_DAY` can be used as a default budget cap for `budget_status(...)`.
 The router stays stateless; you decide where the JSONL budget log lives.
 
+## Canonical invocation receipts
+
+[`router-invocation-receipt-v1.0`](docs/invocation-receipt.md) is a separate offline
+interchange surface for already-observed sanitized values. It uses canonical UTF-8 JSON,
+domain-separated content identities, contiguous attempt accounting, strict token totals,
+and integer nano-unit cost arithmetic. Pricing and FX inputs bind caller-supplied source
+artifact digests; those digests are evidence references, not authenticity proofs.
+
+The receipt builder never calls a provider and the existing `call()` return value is
+unchanged. A receipt contains digests of request, response, output, model, and producer
+identity—not their raw bytes. It always declares `invoice_authoritative=false` and
+`operational_authority=none`.
+
+Deterministic hashes are content-minimizing, not anonymizing: they remain linkable and can
+be guessed when the source space is small. A receipt is not automatically safe to publish.
+
+```python
+from llm_router import InvocationAttemptV1
+
+attempt = InvocationAttemptV1(
+    attempt_index=1,
+    outcome="network_error",
+    http_status=None,
+    reason_code="provider.network_error",
+    response_payload_sha256=None,
+)
+# Supply only already-observed sanitized values; see docs/invocation-receipt.md.
+```
+
 ---
 
 ## Configuration (env)
@@ -189,6 +222,8 @@ What each example shows and what it does *not* prove: [examples/README.md](examp
 - [Project map](docs/project-map.md) — modules, what exists today vs not included, reviewer checklist.
 - [Use cases](docs/use-cases.md) — who this is for, practical workflows, limitations.
 - [Operating model](docs/operating-model.md) — role budgets, usage records, escalation gates, and residual risk.
+- [Invocation receipt V1](docs/invocation-receipt.md) — canonical codec, attempt state
+  machine, fixed-point arithmetic, privacy boundary, and non-claims.
 - [Harness ecosystem roadmap](https://github.com/krivonosoff161/agentic-security-harness/blob/main/docs/ecosystem-roadmap.md)
   — the canonical public ordering for cross-repository integration work.
 

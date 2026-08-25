@@ -4,14 +4,39 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, "codex/ecosystem-doc-convergence"]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: ${{ matrix.check-name }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9", "3.11", "3.12"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.9"
+            check-name: test (3.9)
+          - os: ubuntu-latest
+            python-version: "3.11"
+            check-name: test (3.11)
+          - os: ubuntu-latest
+            python-version: "3.12"
+            check-name: test (3.12)
+          - os: ubuntu-latest
+            python-version: "3.13"
+            check-name: test (ubuntu-latest, py3.13)
+          - os: windows-latest
+            python-version: "3.9"
+            check-name: test (windows-latest, py3.9)
+          - os: windows-latest
+            python-version: "3.11"
+            check-name: test (windows-latest, py3.11)
+          - os: windows-latest
+            python-version: "3.12"
+            check-name: test (windows-latest, py3.12)
+          - os: windows-latest
+            python-version: "3.13"
+            check-name: test (windows-latest, py3.13)
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -24,5 +49,7 @@ jobs:
           pip install -e .[dev]
       - name: Lint
         run: python -m ruff check .
+      - name: Verify invocation receipt schema
+        run: python tools/receipt_contract.py check
       - name: Run tests
         run: python -m pytest -q

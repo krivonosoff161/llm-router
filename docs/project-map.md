@@ -35,7 +35,9 @@ call(role, system, user)
 |---|---|---|
 | `src/llm_router/client.py` | everything: provider resolution, request building, retry loop, cost accounting | ~170 lines |
 | `src/llm_router/budget.py` | offline usage aggregation, budget status, and counterfactual savings helpers | ~220 lines |
-| `src/llm_router/__init__.py` | public exports for client and budget helpers | small |
+| `src/llm_router/receipt.py` | closed canonical invocation receipt, attempt state machine, fixed-point arithmetic | bounded |
+| `contracts/router-invocation-receipt.v1.schema.json` | generated closed shape schema; Python owns semantic checks | generated |
+| `src/llm_router/__init__.py` | public exports for client, budget, and receipt helpers | small |
 | `tests/test_client.py` | 20 offline tests — helpers **and** the full `call()` path with a mocked `aiohttp` session | ~250 lines |
 | `tests/test_budget.py` | offline tests for usage summary, budget caps, and savings estimates | small |
 | `examples/` | two runnable scripts (need a real API key) — see [examples/README.md](../examples/README.md) | small |
@@ -52,7 +54,10 @@ There is intentionally no package layering: one file is the whole surface.
   `raise_if_budget_exceeded`, and `build_savings_report`.
 - Retry on 429/5xx, timeout, fail-fast on missing Yandex config.
 - Errors are reported via the `llm_router` logger (no exceptions leak to the caller;
-  failures return `(None, usage)`).
+  failures return `(None, usage)`). Provider body and exception text are not logged;
+  fixed reason codes preserve the public diagnostic class.
+- Source-owned canonical invocation receipt V1 for already-observed sanitized attempt,
+  token, pricing, and FX evidence. It does not call providers.
 
 ## What is NOT included (by design)
 
@@ -74,11 +79,13 @@ If a change adds one of these, it is a scope change, not a fix — discuss first
 ```bash
 python -m pytest -q        # 20 offline tests, no network, < 1 s
 python -m ruff check .     # lint
+python tools/receipt_contract.py check
 python examples/basic.py   # smoke (requires a provider key; prints a clear
                            # "API key not set" warning otherwise)
 ```
 
-CI (`.github/workflows/tests.yml`) runs pytest on Python 3.9 / 3.11 / 3.12 (Linux).
+CI (`.github/workflows/tests.yml`) runs pytest on Python 3.9 / 3.11 / 3.12 / 3.13
+across Linux and Windows.
 
 ## How to extend safely
 
@@ -102,3 +109,5 @@ CI (`.github/workflows/tests.yml`) runs pytest on Python 3.9 / 3.11 / 3.12 (Linu
 - [ ] README tables (providers / env vars) still match the code.
 - [ ] No claim of provider coverage beyond what `_build_request` actually handles.
 - [ ] Budget helpers still make clear they estimate from usage records, not invoices.
+- [ ] Receipt changes preserve closed fields, canonical bytes, domain identity, attempt
+      loss accounting, fixed-point arithmetic, and the raw-data exclusion boundary.

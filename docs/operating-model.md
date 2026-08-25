@@ -63,6 +63,12 @@ Recommended caller-owned fields:
 Keep raw prompts and model responses in a separate private log if they can
 contain secrets, customer data, private code, or provider configuration.
 
+For cross-component evidence, prefer the stricter
+[`router-invocation-receipt-v1.0`](invocation-receipt.md). It replaces raw model/provider
+identifiers with bounded tokens or digests, accounts for every attempt and terminal state,
+and uses fixed-point cost arithmetic. Building a receipt is an explicit offline caller
+action; `call()` does not claim that it observed fields the provider did not return.
+
 ## Budget Checks
 
 Use the offline helpers against the JSONL records you own:
@@ -94,6 +100,7 @@ Useful gates:
   across concurrent workers.
 - A usage log is public even though prompts, task names, or model names reveal
   private workflow details.
+- A receipt digest is mistaken for a provider signature, invoice, or permission to call.
 - The router is treated as a policy gateway even though it only performs calls
   and returns usage data.
 
