@@ -1,0 +1,55 @@
+{
+  "schema_version": "AgenticSecurityEcosystemComponent.v1",
+  "component_id": "llm-router",
+  "display_name": "LLM Router",
+  "repository": "https://github.com/krivonosoff161/llm-router",
+  "visibility": "public",
+  "kind": "support_adapter",
+  "summary": "Standalone role-based provider routing, retries, and usage/cost arithmetic support outside the trusted security decision core.",
+  "package": {
+    "name": "llm-router",
+    "version": "0.1.0",
+    "install": "pip install -e .",
+    "entry_points": []
+  },
+  "owns": {
+    "modules": ["provider-router"],
+    "checks": [],
+    "collectors": [],
+    "adapters": ["openai-compatible-chat", "yandex-ai-studio-chat"],
+    "contracts": []
+  },
+  "consumes": ["caller-supplied provider configuration and credentials at runtime"],
+  "contracts": [
+    {"id": "component-manifest", "version": "1", "direction": "consumes", "required": false}
+  ],
+  "docs": [
+    {"path": "README.md", "role": "component-front-door"},
+    {"path": "docs/component-roadmap.md", "role": "component-owned"},
+    {"path": "docs/project-map.md", "role": "component-owned"},
+    {"path": "docs/operating-model.md", "role": "component-owned"},
+    {"path": "docs/security-portfolio-roadmap.md", "role": "historical"},
+    {"path": "docs/security-portfolio-roadmap-public.yaml", "role": "historical"},
+    {"path": "docs/security-portfolio-roadmap-contract.json", "role": "historical"}
+  ],
+  "compatibility": {
+    "harness_api": "not-yet-declared",
+    "python": ">=3.9",
+    "platforms": {"supported": ["linux", "windows"], "tested": ["linux"]}
+  },
+  "integration_status": "standalone",
+  "evidence_refs": ["pyproject.toml", "docs/project-map.md", ".github/workflows/tests.yml"],
+  "claims": [
+    "bounded role-based provider routing and retries",
+    "offline-tested usage, budget, and cost arithmetic"
+  ],
+  "non_claims": [
+    "security control",
+    "policy gateway",
+    "secret broker",
+    "provider attestation",
+    "invoice truth",
+    "installable Harness extension"
+  ],
+  "authority": "none"
+}

@@ -1,6 +1,8 @@
 # llm-router
 
-Portfolio ownership and evidence ceilings: [Security Portfolio module contract](docs/security-portfolio-roadmap.md).
+Ecosystem role and current integration status: [component roadmap](docs/component-roadmap.md).
+The public cross-repository plan is owned by the
+[Agentic Security Harness ecosystem roadmap](https://github.com/krivonosoff161/agentic-security-harness/blob/main/docs/ecosystem-roadmap.md).
 
 [![Tests](https://github.com/krivonosoff161/llm-router/actions/workflows/tests.yml/badge.svg)](https://github.com/krivonosoff161/llm-router/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -14,6 +16,9 @@ current API contract and must be verified before use.
 > The public library demonstrates a cheap-to-chief routing pattern with offline
 > tests. It does not publish or verify a production deployment claim. No SDKs or
 > models are hardcoded in the routing logic.
+
+`llm-router` is currently a standalone support adapter. It is not yet a Harness
+extension, and installing Harness does not install or activate this package.
 
 ---
 
@@ -179,11 +184,13 @@ What each example shows and what it does *not* prove: [examples/README.md](examp
 
 ## Docs
 
+- [Component roadmap](docs/component-roadmap.md) — source-owned ecosystem role,
+  platform evidence, historical projections, and integration gates.
 - [Project map](docs/project-map.md) — modules, what exists today vs not included, reviewer checklist.
 - [Use cases](docs/use-cases.md) — who this is for, practical workflows, limitations.
 - [Operating model](docs/operating-model.md) — role budgets, usage records, escalation gates, and residual risk.
-- [Portfolio documentation contract](https://github.com/krivonosoff161/krivonosoff161/blob/main/docs/documentation-contract.md)
-  — how this support layer fits into the broader GitHub portfolio.
+- [Harness ecosystem roadmap](https://github.com/krivonosoff161/agentic-security-harness/blob/main/docs/ecosystem-roadmap.md)
+  — the canonical public ordering for cross-repository integration work.
 
 ---
 
