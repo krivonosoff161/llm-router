@@ -46,9 +46,9 @@ def test_component_manifest_is_closed_and_truthful() -> None:
     assert manifest["authority"] == "none"
     package = manifest["package"]
     assert package == {
-        "name": "llm-router",
-        "version": "0.1.0",
-        "install": "pip install -e .",
+        "name": "agentic-llm-router",
+        "version": "0.2.0",
+        "install": "pip install .",
         "entry_points": [],
     }
     compatibility = manifest["compatibility"]

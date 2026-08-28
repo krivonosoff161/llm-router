@@ -7,9 +7,9 @@
   "kind": "support_adapter",
   "summary": "Standalone role-based provider routing, retries, and usage/cost arithmetic support outside the trusted security decision core.",
   "package": {
-    "name": "llm-router",
-    "version": "0.1.0",
-    "install": "pip install -e .",
+    "name": "agentic-llm-router",
+    "version": "0.2.0",
+    "install": "pip install .",
     "entry_points": []
   },
   "owns": {
@@ -40,11 +40,12 @@
     "platforms": {"supported": ["linux", "windows"], "tested": ["linux", "windows"]}
   },
   "integration_status": "contract_only",
-  "evidence_refs": ["pyproject.toml", "docs/project-map.md", "contracts/router-invocation-receipt.v1.schema.json", "tests/test_receipt.py", ".github/workflows/tests.yml"],
+  "evidence_refs": ["pyproject.toml", "docs/project-map.md", "contracts/router-invocation-receipt.v1.schema.json", "tests/test_package_contract.py", "tests/test_receipt.py", "tools/package_smoke.py", ".github/workflows/tests.yml"],
   "claims": [
     "bounded role-based provider routing and retries",
     "offline-tested usage, budget, and cost arithmetic",
-    "canonical digest-bound invocation receipt with strict attempt and fixed-point cost semantics"
+    "canonical digest-bound invocation receipt with strict attempt and fixed-point cost semantics",
+    "source-buildable unique-name Python distribution candidate"
   ],
   "non_claims": [
     "security control",
@@ -53,7 +54,7 @@
     "provider attestation",
     "invoice truth",
     "receipt evidence as permission to invoke a provider",
-    "installable Harness extension"
+    "published or automatically activated Harness extension"
   ],
   "authority": "none"
 }

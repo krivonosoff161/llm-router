@@ -17,9 +17,14 @@ current API contract and must be verified before use.
 > tests. It does not publish or verify a production deployment claim. No SDKs or
 > models are hardcoded in the routing logic.
 
-`llm-router` now publishes a source-owned, offline invocation-receipt contract and is
-therefore `contract_only` in the ecosystem. It is not yet a Harness extension, and
-installing Harness does not install, invoke, or activate this package.
+The repository now publishes a source-owned, offline invocation-receipt contract and is
+therefore `contract_only` in the ecosystem. Its source tree builds the unique distribution
+candidate `agentic-llm-router==0.2.0`, imported as `llm_router`. It is not yet published or
+automatically activated by Harness.
+
+> Supply-chain boundary: the generic PyPI name `llm-router` belongs to another project.
+> Do not install or declare that coordinate for this repository. The only planned public
+> distribution coordinate is `agentic-llm-router`.
 
 ---
 
@@ -61,10 +66,13 @@ In agentic systems most LLM calls are cheap bulk work (extract, classify, filter
 ```bash
 git clone https://github.com/krivonosoff161/llm-router
 cd llm-router
-pip install -e .          # or: pip install -r requirements.txt
+python -m build
+python -m pip install dist/agentic_llm_router-0.2.0-py3-none-any.whl
 ```
 
-Requires **Python 3.9+**. CI covers Linux; the package is pure Python and is expected to run on Windows/macOS too.
+For editable development use `python -m pip install -e .[dev]`. Requires **Python 3.9+**.
+CI builds and installs the exact wheel on Linux and Windows. Publication and inclusion in a
+Harness optional-dependency group remain separate release gates.
 
 ---
 
