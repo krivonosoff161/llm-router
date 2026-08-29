@@ -71,8 +71,11 @@ python -m pip install dist/agentic_llm_router-0.2.0-py3-none-any.whl
 ```
 
 For editable development use `python -m pip install -e .[dev]`. Requires **Python 3.9+**.
-CI builds and installs the exact wheel on Linux and Windows. Publication and inclusion in a
-Harness optional-dependency group remain separate release gates.
+CI builds and installs the exact wheel on Linux and Windows. Harness `main` declares a
+source-only `router` extra using the unique `agentic-llm-router` distribution name, but
+this package is not on PyPI and published Harness `v1.3.0` metadata does not contain that
+extra. Public `pip install agentic-security-harness[router]` support is therefore
+unavailable; package publication and newer Harness package metadata remain separate release gates.
 
 ---
 
