@@ -10,7 +10,8 @@ phases belong to the
 - Kind: `support_adapter`.
 - Integration: `contract_only`; the repository owns invocation receipt V1, while Harness
   still does not discover or invoke this package as an extension.
-- Package: `llm-router` v0.1.0, installed from a source checkout with `pip install -e .`.
+- Package candidate: unique distribution `agentic-llm-router` v0.2.0, imported as
+  `llm_router` and buildable from source with `python -m build`. It is not yet published.
 - Python: `>=3.9`.
 - Platforms: Linux and Windows are supported; the task CI matrix exercises both on Python
   3.9, 3.11, 3.12, and 3.13.
@@ -45,6 +46,10 @@ ecosystem roadmap; this repository owns only its support-adapter facts.
 
 1. Review and pin invocation receipt V1 from the Harness Extension SDK without moving
    credentials or provider calls into Harness Core.
-2. Add an explicit package entry point and offline adapter conformance fixtures.
-3. Pin supported Harness API and package compatibility ranges.
-4. Promote integration beyond `contract_only` only after cross-repository suite verification.
+2. Publish the exact tested `agentic-llm-router` artifacts through a separately approved
+   release gate. The generic PyPI distribution name `llm-router` is not this project and must
+   never be used as its dependency coordinate.
+3. Add an explicit Harness adapter entry point only if a separate adapter is needed; installing
+   this support package must not imply automatic provider calls.
+4. Pin supported Harness API and package compatibility ranges.
+5. Promote integration beyond `contract_only` only after cross-repository suite verification.

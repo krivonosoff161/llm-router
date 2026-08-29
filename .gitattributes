@@ -7,3 +7,6 @@ docs/invocation-receipt.md text eol=lf
 src/llm_router/receipt.py text eol=lf
 tests/test_receipt.py text eol=lf
 tools/receipt_contract.py text eol=lf
+pyproject.toml text eol=lf
+tests/test_package_contract.py text eol=lf
+tools/package_smoke.py text eol=lf

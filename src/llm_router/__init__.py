@@ -52,4 +52,4 @@ __all__ = [
     "encode_invocation_receipt_v1",
     "invocation_receipt_v1_json_schema",
 ]
-__version__ = "0.1.0"
+__version__ = "0.2.0"
