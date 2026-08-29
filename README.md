@@ -19,8 +19,8 @@ current API contract and must be verified before use.
 
 The repository now publishes a source-owned, offline invocation-receipt contract and is
 therefore `contract_only` in the ecosystem. Its source tree builds the unique distribution
-candidate `agentic-llm-router==0.2.0`, imported as `llm_router`. It is not yet published or
-automatically activated by Harness.
+`agentic-llm-router==0.2.0`, imported as `llm_router`. The distribution is published on
+PyPI but is not automatically activated or invoked by Harness.
 
 > Supply-chain boundary: the generic PyPI name `llm-router` belongs to another project.
 > Do not install or declare that coordinate for this repository. The only planned public
@@ -64,18 +64,14 @@ In agentic systems most LLM calls are cheap bulk work (extract, classify, filter
 ## Install
 
 ```bash
-git clone https://github.com/krivonosoff161/llm-router
-cd llm-router
-python -m build
-python -m pip install dist/agentic_llm_router-0.2.0-py3-none-any.whl
+python -m pip install agentic-llm-router==0.2.0
+python -m pip install "agentic-security-harness[router]==1.4.0"
 ```
 
 For editable development use `python -m pip install -e .[dev]`. Requires **Python 3.9+**.
-CI builds and installs the exact wheel on Linux and Windows. Harness `main` declares a
-source-only `router` extra using the unique `agentic-llm-router` distribution name, but
-this package is not on PyPI and published Harness `v1.3.0` metadata does not contain that
-extra. Public `pip install agentic-security-harness[router]` support is therefore
-unavailable; package publication and newer Harness package metadata remain separate release gates.
+CI builds and installs the exact wheel on Linux and Windows. Published Harness `v1.4.0`
+uses the unique distribution name for its passive `router` extra. Installation does not
+configure credentials, choose a provider, or make a provider call.
 
 ---
 
