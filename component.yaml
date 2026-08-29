@@ -9,7 +9,7 @@
   "package": {
     "name": "agentic-llm-router",
     "version": "0.2.0",
-    "install": "pip install .",
+    "install": "pip install agentic-llm-router==0.2.0",
     "entry_points": []
   },
   "owns": {
@@ -45,7 +45,7 @@
     "bounded role-based provider routing and retries",
     "offline-tested usage, budget, and cost arithmetic",
     "canonical digest-bound invocation receipt with strict attempt and fixed-point cost semantics",
-    "source-buildable unique-name Python distribution candidate"
+    "published unique-name Python distribution"
   ],
   "non_claims": [
     "security control",
@@ -54,7 +54,7 @@
     "provider attestation",
     "invoice truth",
     "receipt evidence as permission to invoke a provider",
-    "published or automatically activated Harness extension"
+    "automatically configured, invoked, or activated Harness extension"
   ],
   "authority": "none"
 }
