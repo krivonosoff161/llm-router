@@ -158,12 +158,22 @@ class _FakeSession:
         return _FakeSession.queue.pop(0)
 
 
+class _FakeClientTimeout:
+    def __init__(self, *, total):
+        self.total = total
+
+
+class _FakeHttpClient:
+    ClientSession = _FakeSession
+    ClientTimeout = _FakeClientTimeout
+
+
 @pytest.fixture()
 def fake_http(monkeypatch):
     """Patch ClientSession with the fake and make backoff sleeps instant."""
     _FakeSession.queue = []
     _FakeSession.requests = []
-    monkeypatch.setattr(client.aiohttp, "ClientSession", _FakeSession)
+    monkeypatch.setattr(client, "_load_http_client", lambda: _FakeHttpClient)
 
     async def _no_sleep(_secs):
         return None
@@ -286,7 +296,11 @@ def test_call_exception_log_uses_fixed_reason_code(monkeypatch, fake_http, caplo
     assert "reason=provider.network_or_response_error" in caplog.text
 
 
-def test_call_missing_api_key_short_circuits(fake_http):
+def test_call_missing_api_key_short_circuits(fake_http, monkeypatch):
+    def _unexpected_http_load():
+        raise AssertionError("network dependency loaded without provider configuration")
+
+    monkeypatch.setattr(client, "_load_http_client", _unexpected_http_load)
     text, usage = asyncio.run(client.call("cheap", "s", "u"))
     assert text is None
     assert usage["provider"] == "openai" and usage["model"] == "gpt-4o-mini"
