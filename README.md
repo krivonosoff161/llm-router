@@ -57,6 +57,10 @@ In agentic systems most LLM calls are cheap bulk work (extract, classify, filter
 - Budget helpers for logs you own: `summarize_usage`, `budget_status`, and
   `build_savings_report`.
 - Zero secrets cached at import — all config read live from env.
+- Importing `llm_router`, including `from llm_router import call`, performs no
+  provider I/O and starts no child process. The `aiohttp` network dependency is
+  loaded only when the caller explicitly invokes `call()` with provider
+  configuration present.
 - ~150 LOC, one runtime dependency (`aiohttp`).
 
 ---

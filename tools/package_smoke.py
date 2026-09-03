@@ -50,17 +50,36 @@ def main() -> int:
             ],
             check=True,
         )
+        import_script = """
+import sys
+
+forbidden = {
+    "os.posix_spawn",
+    "os.spawn",
+    "os.system",
+    "socket.__new__",
+    "socket.bind",
+    "socket.connect",
+    "socket.getaddrinfo",
+    "subprocess.Popen",
+}
+
+def audit(event, args):
+    if event in forbidden:
+        raise RuntimeError(f"forbidden import side effect: {event}")
+
+sys.addaudithook(audit)
+sys.path.insert(0, sys.argv[1])
+import llm_router as package
+assert package.__version__ == "0.2.0"
+assert package.INVOCATION_RECEIPT_V1 == "llm-router-invocation-receipt-v1.0"
+"""
         subprocess.run(
             [
                 sys.executable,
+                "-I",
                 "-c",
-                (
-                    "import sys;sys.path.insert(0,sys.argv[1]);"
-                    "import llm_router as p;"
-                    "assert p.__version__=='0.2.0';"
-                    "assert p.INVOCATION_RECEIPT_V1=="
-                    "'llm-router-invocation-receipt-v1.0'"
-                ),
+                import_script,
                 str(target),
             ],
             check=True,

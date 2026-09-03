@@ -29,12 +29,17 @@ import logging
 import os
 import re
 
-import aiohttp
-
 log = logging.getLogger("llm_router")
 _ROLE_VALUES = frozenset({"cheap", "mid", "chief", "audit"})
 _PROVIDER_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,63}$")
 _MAX_RETRIES = 15
+
+
+def _load_http_client():
+    """Load the network dependency only for an explicit provider call."""
+    import aiohttp
+
+    return aiohttp
 
 # Default model per role for OpenAI-compatible providers (override via env).
 _OPENAI_DEFAULTS = {"cheap": "gpt-4o-mini", "mid": "gpt-4o-mini",
@@ -154,6 +159,7 @@ async def call(role: str, system: str, user: str, *,
         log.warning("llm_router: reason=router.missing_configuration")
         return None, usage_dict(p, model, role, {})
 
+    aiohttp = _load_http_client()
     last_reason = "provider.not_attempted"
     for attempt in range(retries + 1):
         try:
