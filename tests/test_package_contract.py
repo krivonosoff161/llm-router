@@ -13,9 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_distribution_coordinate_is_unique_and_versioned() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     assert 'name = "agentic-llm-router"' in pyproject
-    assert 'version = "0.2.0"' in pyproject
+    assert 'version = "0.2.1"' in pyproject
     assert '\nname = "llm-router"' not in pyproject
-    assert llm_router.__version__ == "0.2.0"
+    assert llm_router.__version__ == "0.2.1"
 
 
 def test_package_declares_no_automatic_harness_entry_point() -> None:
@@ -23,6 +23,14 @@ def test_package_declares_no_automatic_harness_entry_point() -> None:
     assert "[project.entry-points" not in pyproject
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "generic PyPI name `llm-router` belongs to another project" in readme
+
+
+def test_release_checks_exact_installed_wheel_under_import_audit() -> None:
+    workflow = (ROOT / ".github/workflows/release-package.yml").read_text(encoding="utf-8")
+    assert "python tools/package_smoke.py dist" in workflow
+    assert "sys.addaudithook(audit)" in workflow
+    assert 'assert "aiohttp" not in sys.modules' in workflow
+    assert "agentic-llm-router==0.2.0" not in workflow
 
 
 def test_public_package_import_has_no_process_or_network_side_effect() -> None:

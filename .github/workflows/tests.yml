@@ -89,4 +89,4 @@ jobs:
           if closure(Path("dist")) != closure(Path("reproducibility-check")):
               raise SystemExit("release artifacts are not reproducible")
           PY
-          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.0
+          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.1

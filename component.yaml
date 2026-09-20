@@ -8,8 +8,8 @@
   "summary": "Standalone role-based provider routing, retries, and usage/cost arithmetic support outside the trusted security decision core.",
   "package": {
     "name": "agentic-llm-router",
-    "version": "0.2.0",
-    "install": "pip install agentic-llm-router==0.2.0",
+    "version": "0.2.1",
+    "install": "pip install agentic-llm-router==0.2.1",
     "entry_points": []
   },
   "owns": {

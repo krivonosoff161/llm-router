@@ -10,9 +10,10 @@ phases belong to the
 - Kind: `support_adapter`.
 - Integration: `contract_only`; the repository owns invocation receipt V1, while Harness
   still does not discover or invoke this package as an extension.
-- Package: unique public distribution `agentic-llm-router==0.2.0`, imported as
-  `llm_router`. Published Harness `v1.4.0` exposes it through the passive `router` extra;
-  Harness still does not configure or invoke a provider.
+- Package: unique public distribution `agentic-llm-router==0.2.1`, imported as
+  `llm_router`. Historical Harness `v1.4.0` and `v1.5.0` pin `0.2.0` through the
+  passive `router` extra; a new Harness release must select `0.2.1` after publication.
+  Harness still does not configure or invoke a provider automatically.
 - Python: `>=3.9`.
 - Platforms: Linux and Windows are supported; the task CI matrix exercises both on Python
   3.9, 3.11, 3.12, and 3.13.
