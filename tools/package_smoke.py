@@ -10,8 +10,8 @@ import zipfile
 from pathlib import Path
 
 
-EXPECTED_WHEEL = "agentic_llm_router-0.2.0-py3-none-any.whl"
-EXPECTED_SDIST = "agentic_llm_router-0.2.0.tar.gz"
+EXPECTED_WHEEL = "agentic_llm_router-0.2.1-py3-none-any.whl"
+EXPECTED_SDIST = "agentic_llm_router-0.2.1.tar.gz"
 
 
 def main() -> int:
@@ -31,7 +31,7 @@ def main() -> int:
         raise SystemExit("Router wheel is missing its public package surface")
     if any(name.endswith("entry_points.txt") for name in names):
         raise SystemExit("Router base package unexpectedly declares an entry point")
-    if any(name.startswith("llm_router-0.2.0.dist-info/") for name in names):
+    if any(name.startswith("llm_router-0.2.1.dist-info/") for name in names):
         raise SystemExit("wheel uses the unsafe generic distribution coordinate")
     with tempfile.TemporaryDirectory() as temporary:
         target = Path(temporary) / "site"
@@ -71,7 +71,7 @@ def audit(event, args):
 sys.addaudithook(audit)
 sys.path.insert(0, sys.argv[1])
 import llm_router as package
-assert package.__version__ == "0.2.0"
+assert package.__version__ == "0.2.1"
 assert package.INVOCATION_RECEIPT_V1 == "llm-router-invocation-receipt-v1.0"
 """
         subprocess.run(

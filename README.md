@@ -19,8 +19,9 @@ current API contract and must be verified before use.
 
 The repository now publishes a source-owned, offline invocation-receipt contract and is
 therefore `contract_only` in the ecosystem. Its source tree builds the unique distribution
-`agentic-llm-router==0.2.0`, imported as `llm_router`. The distribution is published on
-PyPI but is not automatically activated or invoked by Harness.
+`agentic-llm-router==0.2.1`, imported as `llm_router`. Exact publication is established by
+[PyPI release history](https://pypi.org/project/agentic-llm-router/#history), not source
+metadata alone. It is not automatically activated or invoked by Harness.
 
 > Supply-chain boundary: the generic PyPI name `llm-router` belongs to another project.
 > Do not install or declare that coordinate for this repository. The only planned public
@@ -68,14 +69,20 @@ In agentic systems most LLM calls are cheap bulk work (extract, classify, filter
 ## Install
 
 ```bash
-python -m pip install agentic-llm-router==0.2.0
-python -m pip install "agentic-security-harness[router]==1.4.0"
+python -m pip install agentic-llm-router==0.2.1
 ```
 
 For editable development use `python -m pip install -e .[dev]`. Requires **Python 3.9+**.
-CI builds and installs the exact wheel on Linux and Windows. Published Harness `v1.4.0`
-uses the unique distribution name for its passive `router` extra. Installation does not
-configure credentials, choose a provider, or make a provider call.
+CI builds and audits the exact installed wheel on Linux and Windows. Historical
+Harness `v1.4.0` and `v1.5.0` use Router `0.2.0` for their passive `router` extra;
+they do not include the passive-import repair. A new Harness release must update that
+pin after Router `0.2.1` is published. Installation does not configure credentials,
+choose a provider, or make a provider call.
+
+Version `0.2.1` packages the passive-import repair from PR #12: ordinary package import
+does not load `aiohttp` or start a child process. Source and installed-wheel tests install
+process/network audit denial before import. Provider calls and production compatibility
+are not exercised or certified by those tests. Published `0.2.0` bytes are unchanged.
 
 ---
 

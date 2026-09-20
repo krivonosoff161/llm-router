@@ -47,8 +47,8 @@ def test_component_manifest_is_closed_and_truthful() -> None:
     package = manifest["package"]
     assert package == {
         "name": "agentic-llm-router",
-        "version": "0.2.0",
-        "install": "pip install agentic-llm-router==0.2.0",
+        "version": "0.2.1",
+        "install": "pip install agentic-llm-router==0.2.1",
         "entry_points": [],
     }
     compatibility = manifest["compatibility"]
@@ -98,7 +98,8 @@ def test_install_docs_bind_public_coordinate_and_passive_extra() -> None:
     for text in (readme, roadmap):
         assert "Harness `v1.4.0`" in text
         assert "passive `router` extra" in text
-    assert "agentic-security-harness[router]==1.4.0" in readme
-    assert "agentic-llm-router==0.2.0" in readme
+    assert "they do not include the passive-import repair" in readme
+    assert "A new Harness release must update that" in readme
+    assert "agentic-llm-router==0.2.1" in readme
     assert "generic PyPI name `llm-router` belongs to another project" in readme
     assert "contract_only" in roadmap

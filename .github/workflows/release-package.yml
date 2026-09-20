@@ -50,7 +50,7 @@ jobs:
       - name: Verify tag and package identities
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-          EXPECTED_PACKAGES: '{"agentic-llm-router":"0.2.0"}'
+          EXPECTED_PACKAGES: '{"agentic-llm-router":"0.2.1"}'
           PROJECT_FILES: '["pyproject.toml"]'
         run: |
           python - <<'PY'
@@ -105,10 +105,11 @@ jobs:
           if observed != expected:
               raise SystemExit(f"reproducibility mismatch: expected={expected}, observed={observed}")
           PY
-          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.0
+          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.1
+          python tools/package_smoke.py dist
       - name: Isolated installed-wheel metadata smoke
         env:
-          EXPECTED_PACKAGES: '{"agentic-llm-router":"0.2.0"}'
+          EXPECTED_PACKAGES: '{"agentic-llm-router":"0.2.1"}'
         run: |
           set -euo pipefail
           python -m venv release-smoke
@@ -243,7 +244,7 @@ jobs:
           cd dist
           sha256sum --check SHA256SUMS
           cd ..
-          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.0
+          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.1
           for artifact in dist/*.tar.gz dist/*.whl dist/SHA256SUMS; do
             gh attestation verify "$artifact" \
               --repo "$GITHUB_REPOSITORY" \
@@ -255,7 +256,7 @@ jobs:
               --deny-self-hosted-runners
           done
           if test "${{ inputs.target }}" = "pypi"; then
-            python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.0 \
+            python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.1 \
               --host test.pypi.org --attempts 3 --wait-seconds 10
           fi
           mkdir publish-dist
@@ -277,7 +278,7 @@ jobs:
         env:
           TARGET_HOST: ${{ inputs.target == 'testpypi' && 'test.pypi.org' || 'pypi.org' }}
         run: |
-          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.0 \
+          python tools/verify_release_index.py --dist-dir dist --expected agentic-llm-router==0.2.1 \
             --host "$TARGET_HOST" --attempts 8 --wait-seconds 15
 
   smoke:
@@ -299,13 +300,13 @@ jobs:
         shell: bash
         env:
           INDEX_URL: ${{ inputs.target == 'testpypi' && 'https://test.pypi.org/simple/' || 'https://pypi.org/simple/' }}
-          EXPECTED_PACKAGES: '{"agentic-llm-router":"0.2.0"}'
+          EXPECTED_PACKAGES: '{"agentic-llm-router":"0.2.1"}'
         run: |
           set -euo pipefail
           python -m pip install --no-cache-dir \
             --index-url "$INDEX_URL" \
             --extra-index-url https://pypi.org/simple/ \
-            "agentic-llm-router==0.2.0"
+            "agentic-llm-router==0.2.1"
           python - <<'PY'
           import importlib.metadata as metadata
           import json
@@ -315,6 +316,13 @@ jobs:
               assert metadata.version(name) == version
           PY
           python - <<'PY'
+          import sys
+          def audit(event, args):
+              if event in {"subprocess.Popen", "os.system", "os.spawn", "os.posix_spawn",
+                           "socket.__new__", "socket.bind", "socket.connect", "socket.getaddrinfo"}:
+                  raise RuntimeError(f"forbidden import side effect: {event}")
+          sys.addaudithook(audit)
           import llm_router
-          assert llm_router.__version__ == "0.2.0"
+          assert llm_router.__version__ == "0.2.1"
+          assert "aiohttp" not in sys.modules
           PY
